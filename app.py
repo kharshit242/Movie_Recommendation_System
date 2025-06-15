@@ -15,7 +15,6 @@ def fetch_poster(movie_id):
     data = response.json()
     return 'https://image.tmdb.org/t/p/w500' + data['poster_path']
 
-
 def recommend(movie_name):
     index = movies[movies['title'] == movie_name].index[0]
     distances = similarity[index]
@@ -24,16 +23,15 @@ def recommend(movie_name):
     recommended_movies = []
     recommended_movies_posters = []
     for i in movie_list:
-        movie_id= movies.iloc[i[0]].movie_id
-        recommended_movies.append(movies.iloc[i[0]].title)
-        recommended_movies_posters.append(fetch_poster(movies.iloc[i[0]].movie_id))        
+        movie_id = movies.iloc[i[0]]['movie_id']
+        recommended_movies.append(movies.iloc[i[0]]['title'])
+        recommended_movies_posters.append(fetch_poster(movie_id))        
     return recommended_movies, recommended_movies_posters
 
+movies_dict = pickle.load(open('movie_dict.pkl','rb'))
+movies = pd.DataFrame(movies_dict)
 
-movies_dict=pickle.load(open('movie_dict.pkl','rb'))
-movies=pd.DataFrame(movies_dict)
-
-similarity=pickle.load(open('similarity.pkl','rb'))
+similarity = pickle.load(open('similarity.pkl','rb'))
 
 st.title('🎬 Movie Recommender System')
 st.markdown("##### Find your next favorite movie 🍿")
