@@ -55,13 +55,6 @@ def recommend(movie_name):
 movies_dict = pickle.load(open('movie_dict.pkl','rb'))
 movies = pd.DataFrame(movies_dict)
 
-# Debug: Show available columns and sample data
-st.sidebar.write("**Debug Information:**")
-st.sidebar.write("Available columns:", movies.columns.tolist())
-st.sidebar.write("DataFrame shape:", movies.shape)
-st.sidebar.write("Sample data:")
-st.sidebar.dataframe(movies.head())
-
 similarity = pickle.load(open('similarity.pkl','rb'))
 
 st.title('🎬 Movie Recommender System')
@@ -76,8 +69,8 @@ if st.button('Show Recommendation'):
     with st.spinner('Fetching recommendations...'):
         names, poster = recommend(selected_movie_name)
         columns = st.columns(5)
-
+        
         for i in range(5):
             with columns[i]:
-                st.image(poster[i], use_column_width=True)
+                st.image(poster[i], use_container_width=True)
                 st.caption(names[i])
