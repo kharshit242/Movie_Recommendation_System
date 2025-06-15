@@ -10,10 +10,22 @@ load_dotenv()
 API_KEY = os.getenv('TMDB_API_KEY')
 
 def fetch_poster(movie_id):
-    url = f'https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}&language=en-US'
-    response = requests.get(url)
-    data = response.json()
-    return 'https://image.tmdb.org/t/p/w500' + data['poster_path']
+    try:
+        if not API_KEY:
+            return "https://via.placeholder.com/500x750?text=No+API+Key"
+        
+        url = f'https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}&language=en-US'
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        
+        if 'poster_path' in data and data['poster_path']:
+            return 'https://image.tmdb.org/t/p/w500' + data['poster_path']
+        else:
+            return "https://via.placeholder.com/500x750?text=No+Poster"
+    except Exception as e:
+        st.error(f"Error fetching poster: {e}")
+        return "https://via.placeholder.com/500x750?text=Error"
 
 def recommend(movie_name):
     index = movies[movies['title'] == movie_name].index[0]
@@ -23,13 +35,32 @@ def recommend(movie_name):
     recommended_movies = []
     recommended_movies_posters = []
     for i in movie_list:
-        movie_id = movies.iloc[i[0]]['movie_id']
+        # Check if movie_id exists, if not use other available ID columns
+        if 'movie_id' in movies.columns:
+            movie_id = movies.iloc[i[0]]['movie_id']
+            recommended_movies_posters.append(fetch_poster(movie_id))
+        elif 'id' in movies.columns:
+            movie_id = movies.iloc[i[0]]['id']
+            recommended_movies_posters.append(fetch_poster(movie_id))
+        elif 'tmdb_id' in movies.columns:
+            movie_id = movies.iloc[i[0]]['tmdb_id']
+            recommended_movies_posters.append(fetch_poster(movie_id))
+        else:
+            # Use placeholder if no ID available
+            recommended_movies_posters.append("https://via.placeholder.com/500x750?text=No+Poster")
+        
         recommended_movies.append(movies.iloc[i[0]]['title'])
-        recommended_movies_posters.append(fetch_poster(movie_id))        
     return recommended_movies, recommended_movies_posters
 
 movies_dict = pickle.load(open('movie_dict.pkl','rb'))
 movies = pd.DataFrame(movies_dict)
+
+# Debug: Show available columns and sample data
+st.sidebar.write("**Debug Information:**")
+st.sidebar.write("Available columns:", movies.columns.tolist())
+st.sidebar.write("DataFrame shape:", movies.shape)
+st.sidebar.write("Sample data:")
+st.sidebar.dataframe(movies.head())
 
 similarity = pickle.load(open('similarity.pkl','rb'))
 
